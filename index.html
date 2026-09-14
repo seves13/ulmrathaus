@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Meta-Refresh als Fallback für den Browser -->
+<meta http-equiv="refresh" content="60">
+<title>Abfahrtsmonitor Ulm Rathaus</title>
+<style>
+  @page { margin: 0; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #ffffff;
+    color: #000000;
+    margin: 0;
+    padding: 12px;
+    -webkit-text-size-adjust: 100%;
+  }
+  .header {
+    border-bottom: 3px solid #000;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+    width: 100%;
+    overflow: hidden;
+  }
+  h1 { 
+    font-size: 1.5em; 
+    margin: 0; 
+    float: left;
+    font-weight: bold;
+  }
+  .clock { 
+    font-size: 1.5em; 
+    font-weight: bold; 
+    float: right; 
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 5px;
+  }
+  th {
+    text-align: left;
+    border-bottom: 2px solid #000;
+    padding: 6px 4px;
+    font-size: 1.1em;
+  }
+  td {
+    padding: 10px 4px;
+    border-bottom: 1px solid #888;
+    font-size: 1.1em;
+    vertical-align: middle;
+  }
+  .line { 
+    font-weight: bold; 
+    width: 20%; 
+  }
+  .destination { 
+    width: 55%; 
+    word-break: break-word; 
+  }
+  .time { 
+    font-weight: bold; 
+    text-align: right; 
+    width: 25%; 
+    white-space: nowrap;
+  }
+  .no-data {
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Ulm Rathaus</h1>
+  <div class="clock" id="clock">--:--</div>
+</div>
+<table>
+  <thead>
+    <tr>
+      <th>Linie</th>
+      <th>Richtung</th>
+      <th style="text-align:right;">Abfahrt</th>
+    </tr>
+  </thead>
+  <tbody id="departure-table">
+  </tbody>
+</table>
+
+<script>
+function zeroPad(num) {
+    return (num < 10 ? '0' : '') + num;
+}
+
+var timetable = [
+    // --- MONTAG BIS FREITAG ---
+    { line: "X34", dest: "Bühl Bahnhof", time: "04:52", tage: "Mo-Fr" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "06:00", tage: "Mo-Fr" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "07:05", tage: "Mo-Fr" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "08:10", tage: "Mo-Fr" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "09:10", tage: "Mo-Fr" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "10:10", tage: "Mo-Fr" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "11:10", tage: "Mo-Fr" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "12:10", tage: "Mo-Fr" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "13:10", tage: "Mo-Fr" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "14:10", tage: "Mo-Fr" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "15:10", tage: "Mo-Fr" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "16:10", tage: "Mo-Fr" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "17:10", tage: "Mo-Fr" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "18:10", tage: "Mo-Fr" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "19:10", tage: "Mo-Fr" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "20:10", tage: "Mo-Fr" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "21:10", tage: "Mo-Fr" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "22:10", tage: "Mo-Fr" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "23:12", tage: "Mo-Fr" },
+
+    { line: "X34", dest: "Rastatt Bahnhof", time: "04:33", tage: "Mo-Fr" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "05:30", tage: "Mo-Fr" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "06:42", tage: "Mo-Fr" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "07:42", tage: "Mo-Fr" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "08:42", tage: "Mo-Fr" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "09:42", tage: "Mo-Fr" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "10:42", tage: "Mo-Fr" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "11:42", tage: "Mo-Fr" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "12:42", tage: "Mo-Fr" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "13:42", tage: "Mo-Fr" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "14:42", tage: "Mo-Fr" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "15:42", tage: "Mo-Fr" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "16:42", tage: "Mo-Fr" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "17:42", tage: "Mo-Fr" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "18:42", tage: "Mo-Fr" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "19:42", tage: "Mo-Fr" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "20:42", tage: "Mo-Fr" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "21:42", tage: "Mo-Fr" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "22:42", tage: "Mo-Fr" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "23:42", tage: "Mo-Fr" },
+
+    { line: "268", dest: "Bühl Bahnhof", time: "05:54", tage: "Mo-Fr" },
+    { line: "268", dest: "Schwarzach Bahnhof", time: "06:58", tage: "Mo-Fr" },
+    { line: "268", dest: "Bühl Bahnhof", time: "07:03", tage: "Mo-Fr" },
+    { line: "268", dest: "Bühl Bahnhof", time: "08:05", tage: "Mo-Fr" },
+    { line: "268", dest: "Bühl Bahnhof", time: "08:45", tage: "Mo-Fr" },
+    { line: "268", dest: "Bühl Bahnhof", time: "09:45", tage: "Mo-Fr" },
+    { line: "268", dest: "Bühl Bahnhof", time: "10:45", tage: "Mo-Fr" },
+    { line: "268", dest: "Bühl Bahnhof", time: "11:45", tage: "Mo-Fr" },
+    { line: "268", dest: "Bühl Bahnhof", time: "12:45", tage: "Mo-Fr" },
+    { line: "268", dest: "Schwarzach Bahnhof", time: "12:50", tage: "Mo-Fr" },
+    { line: "268", dest: "Bühl Bahnhof", time: "13:40", tage: "Mo-Fr" },
+    { line: "268", dest: "Schwarzach Bahnhof", time: "13:44", tage: "Mo-Fr" },
+    { line: "268", dest: "Bühl Bahnhof", time: "14:45", tage: "Mo-Fr" },
+    { line: "268", dest: "Bühl Bahnhof", time: "15:45", tage: "Mo-Fr" },
+    { line: "268", dest: "Schwarzach Bahnhof", time: "16:00", tage: "Mo-Fr" },
+    { line: "268", dest: "Bühl Bahnhof", time: "16:45", tage: "Mo-Fr" },
+    { line: "268", dest: "Bühl Bahnhof", time: "17:05", tage: "Mo-Fr" },
+    { line: "268", dest: "Bühl Bahnhof", time: "17:45", tage: "Mo-Fr" },
+    { line: "268", dest: "Bühl Bahnhof", time: "18:05", tage: "Mo-Fr" },
+    { line: "268", dest: "Bühl Bahnhof", time: "18:45", tage: "Mo-Fr" },
+    { line: "268", dest: "Schwarzach Bahnhof", time: "19:39", tage: "Mo-Fr" },
+
+    { line: "268", dest: "Freistett Busbahnhof", time: "05:19", tage: "Mo-Fr" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "05:44", tage: "Mo-Fr" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "07:08", tage: "Mo-Fr" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "07:45", tage: "Mo-Fr" },
+    { line: "268", dest: "Lichtenau Sommerfeldstr.", time: "08:10", tage: "Mo-Fr" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "08:50", tage: "Mo-Fr" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "09:50", tage: "Mo-Fr" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "10:50", tage: "Mo-Fr" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "11:50", tage: "Mo-Fr" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "12:50", tage: "Mo-Fr" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "13:50", tage: "Mo-Fr" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "14:50", tage: "Mo-Fr" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "15:50", tage: "Mo-Fr" },
+    { line: "268", dest: "Lichtenau Sommerfeldstr.", time: "16:10", tage: "Mo-Fr" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "16:50", tage: "Mo-Fr" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "17:10", tage: "Mo-Fr" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "17:50", tage: "Mo-Fr" },
+    { line: "268", dest: "Lichtenau Sommerfeldstr.", time: "18:10", tage: "Mo-Fr" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "18:50", tage: "Mo-Fr" },
+    { line: "268", dest: "Lichtenau Sommerfeldstr.", time: "19:10", tage: "Mo-Fr" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "19:50", tage: "Mo-Fr" },
+
+    { line: "268s", dest: "Bühl Bahnhof", time: "06:35", tage: "Mo-Fr" },
+    { line: "268s", dest: "Schwarzach Bahnhof", time: "06:58", tage: "Mo-Fr" },
+    { line: "268s", dest: "Bühl Gymnasium", time: "07:05", tage: "Mo-Fr" },
+    { line: "268s", dest: "Muckenschopf", time: "11:50", tage: "Mo-Fr" },
+    { line: "268s", dest: "Muckenschopf", time: "12:24", tage: "Mo-Fr" },
+    { line: "268s", dest: "Lichtenau Sommerfeldstr.", time: "12:42", tage: "Mo-Fr" },
+    { line: "268s", dest: "Lichtenau Sommerfeldstr.", time: "12:46", tage: "Mo-Fr" },
+    { line: "268s", dest: "Muckenschopf", time: "13:34", tage: "Mo-Fr" },
+    { line: "268s", dest: "Freistett Busbahnhof", time: "13:53", tage: "Mo-Fr" },
+    { line: "268s", dest: "Schwarzach Bahnhof", time: "14:07", tage: "Mo-Fr" },
+
+    // --- SAMSTAG ---
+    { line: "X34", dest: "Bühl Bahnhof", time: "06:00", tage: "Sa" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "07:05", tage: "Sa" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "08:10", tage: "Sa" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "09:10", tage: "Sa" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "10:10", tage: "Sa" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "11:10", tage: "Sa" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "12:10", tage: "Sa" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "13:10", tage: "Sa" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "14:10", tage: "Sa" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "15:10", tage: "Sa" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "16:10", tage: "Sa" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "17:10", tage: "Sa" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "18:10", tage: "Sa" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "19:10", tage: "Sa" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "20:10", tage: "Sa" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "21:10", tage: "Sa" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "22:10", tage: "Sa" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "23:12", tage: "Sa" },
+
+    { line: "X34", dest: "Rastatt Bahnhof", time: "05:30", tage: "Sa" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "06:42", tage: "Sa" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "07:38", tage: "Sa" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "08:42", tage: "Sa" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "09:42", tage: "Sa" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "10:42", tage: "Sa" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "11:42", tage: "Sa" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "12:42", tage: "Sa" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "13:42", tage: "Sa" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "14:42", tage: "Sa" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "15:42", tage: "Sa" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "16:42", tage: "Sa" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "17:42", tage: "Sa" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "18:42", tage: "Sa" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "19:42", tage: "Sa" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "20:42", tage: "Sa" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "21:42", tage: "Sa" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "22:42", tage: "Sa" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "23:42", tage: "Sa" },
+
+    { line: "268", dest: "Bühl Bahnhof", time: "06:45", tage: "Sa" },
+    { line: "268", dest: "Bühl Bahnhof", time: "07:40", tage: "Sa" },
+    { line: "268", dest: "Bühl Bahnhof", time: "08:45", tage: "Sa" },
+    { line: "268", dest: "Bühl Bahnhof", time: "09:45", tage: "Sa" },
+    { line: "268", dest: "Bühl Bahnhof", time: "10:45", tage: "Sa" },
+    { line: "268", dest: "Bühl Bahnhof", time: "11:45", tage: "Sa" },
+    { line: "268", dest: "Bühl Bahnhof", time: "12:45", tage: "Sa" },
+    { line: "268", dest: "Bühl Bahnhof", time: "13:45", tage: "Sa" },
+    { line: "268", dest: "Bühl Bahnhof", time: "14:45", tage: "Sa" },
+    { line: "268", dest: "Bühl Bahnhof", time: "15:45", tage: "Sa" },
+    { line: "268", dest: "Bühl Bahnhof", time: "16:45", tage: "Sa" },
+    { line: "268", dest: "Bühl Bahnhof", time: "17:45", tage: "Sa" },
+    { line: "268", dest: "Schwarzach Bahnhof", time: "18:45", tage: "Sa" },
+
+    { line: "268", dest: "Freistett Busbahnhof", time: "06:45", tage: "Sa" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "07:50", tage: "Sa" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "08:50", tage: "Sa" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "09:50", tage: "Sa" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "10:50", tage: "Sa" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "11:50", tage: "Sa" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "12:50", tage: "Sa" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "13:50", tage: "Sa" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "14:50", tage: "Sa" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "15:50", tage: "Sa" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "16:50", tage: "Sa" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "17:50", tage: "Sa" },
+    { line: "268", dest: "Freistett Busbahnhof", time: "18:50", tage: "Sa" },
+
+    // --- SONN- UND FEIERTAG ---
+    { line: "X34", dest: "Bühl Bahnhof", time: "07:05", tage: "So" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "08:10", tage: "So" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "09:10", tage: "So" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "10:10", tage: "So" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "11:10", tage: "So" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "12:10", tage: "So" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "13:10", tage: "So" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "14:10", tage: "So" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "15:10", tage: "So" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "16:10", tage: "So" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "17:10", tage: "So" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "18:10", tage: "So" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "19:10", tage: "So" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "20:10", tage: "So" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "21:10", tage: "So" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "22:10", tage: "So" },
+    { line: "X34", dest: "Bühl Bahnhof", time: "23:12", tage: "So" },
+
+    { line: "X34", dest: "Rastatt Bahnhof", time: "05:30", tage: "So" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "06:42", tage: "So" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "07:38", tage: "So" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "08:42", tage: "So" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "09:42", tage: "So" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "10:42", tage: "So" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "11:42", tage: "So" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "12:42", tage: "So" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "13:42", tage: "So" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "14:42", tage: "So" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "15:42", tage: "So" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "16:42", tage: "So" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "17:42", tage: "So" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "18:42", tage: "So" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "19:42", tage: "So" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "20:42", tage: "So" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "21:42", tage: "So" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "22:42", tage: "So" },
+    { line: "X34", dest: "Rastatt Bahnhof", time: "23:42", tage: "So" }
+];
+
+function updateMonitor() {
+    var now = new Date();
+    
+    var hours = zeroPad(now.getHours());
+    var minutes = zeroPad(now.getMinutes());
+    document.getElementById('clock').innerHTML = hours + ":" + minutes;
+    
+    var dayOfWeek = now.getDay();
+    var currentTagGroup = "Mo-Fr";
+    if (dayOfWeek === 6) {
+        currentTagGroup = "Sa";
+    } else if (dayOfWeek === 0) {
+        currentTagGroup = "So";
+    }
+    
+    var currentMinutesFromMidnight = (now.getHours() * 60) + now.getMinutes();
+    
+    var upcoming = [];
+    for (var i = 0; i < timetable.length; i++) {
+        var entry = timetable[i];
+        
+        if (entry.tage === currentTagGroup) {
+            var parts = entry.time.split(":");
+            var entryMinutes = (parseInt(parts[0], 10) * 60) + parseInt(parts[1], 10);
+            
+            if (entryMinutes >= currentMinutesFromMidnight) {
+                var diff = entryMinutes - currentMinutesFromMidnight;
+                
+                var displayTime = entry.time;
+                if (diff === 0) {
+                    displayTime = "sofort";
+                } else if (diff <= 30) {
+                    displayTime = "in " + diff + " Min";
+                }
+                
+                upcoming.push({
+                    line: entry.line,
+                    dest: entry.dest,
+                    displayTime: displayTime,
+                    rawMinutes: entryMinutes
+                });
+            }
+        }
+    }
+    
+    upcoming.sort(function(a, b) {
+        return a.rawMinutes - b.rawMinutes;
+    });
+    
+    var nextDepartures = upcoming.slice(0, 5);
+    var tbody = document.getElementById('departure-table');
+    tbody.innerHTML = '';
+    
+    if (nextDepartures.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="no-data">Keine weiteren Abfahrten heute</td></tr>';
+    } else {
+        for (var j = 0; j < nextDepartures.length; j++) {
+            var dep = nextDepartures[j];
+            var row = '<tr>' +
+                '<td class="line">' + dep.line + '</td>' +
+                '<td class="destination">' + dep.dest + '</td>' +
+                '<td class="time">' + dep.displayTime + '</td>' +
+                '</tr>';
+            tbody.innerHTML += row;
+        }
+    }
+}
+
+// Skript initial starten
+updateMonitor();
+
+// Zusätzliches Backup per JS: Aktualisiert die Daten alle 30 Sekunden ohne Seiten-Reload
+setInterval(updateMonitor, 30000);
+</script>
+</body>
+</html>
